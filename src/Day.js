@@ -9,11 +9,11 @@ import {
 
 export default class Day extends React.Component {
 	render() {
-		let {date, status, disabled, onDayPress, width} = this.props;
+		let {date, status, disabled, notInRange, onDayPress, width} = this.props;
 		let onPress, textColor, backColor;
 
 		if (disabled) {
-			status = 'disabled';
+			status = notInRange?'notInRange':'disabled';
 			onPress = null;
 		} else {
 			onPress = () => {
@@ -40,6 +40,10 @@ export default class Day extends React.Component {
 			case 'inRange':
 				backColor = this.props.dayInRangeBackColor;
 				textColor = this.props.dayInRangeTextColor;
+				break;
+			case 'notInRange':
+				backColor = this.props.disabledDatesBackColor;
+				textColor = this.props.disabledDatesTextColor;
 				break;
 		}
 

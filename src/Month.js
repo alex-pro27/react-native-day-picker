@@ -53,6 +53,7 @@ export default class Month extends React.Component {
 								key={i}
 								{...this.props}
 								disabled={day.disabled}
+								notInRange={day.notInRange}
 								status={day.status}
 								date={day.date}
 								onDayPress={changeSelection}

@@ -1,24 +1,17 @@
 # react-native-day-picker
 
-react-native-day-picker is a simple calendar which allows you select date range. 
-Suites for android and ios. 
+### it is a fork with https://github.com/ivanchenko/react-native-day-picker. Here we have added the ability to disable dates
  
-![Demo gif](https://github.com/ivanchenko/react-native-day-picker/blob/master/example-day-picker.gif?raw=true)
 
 ## Getting Started
 
 ```sh
-$ npm install react-native-day-picker --save
+$ npm install https://github.com/great27/react-native-day-picker --save
 ```
 
-> **Important:** When you build app in release mode, calendar works smooth without any lags.
-
-> **Note:** If you use react-native v0.24 or lower install version 1.0.0 
-
-## Usage
+## Example
 
 ```javascript
-'use strict';
 
 import React from 'react';
 import {
@@ -47,7 +40,11 @@ class DayPicker extends React.Component {
                     startDate={startDate}
                     selectFrom={from}
                     selectTo={to}
-                    width={350}
+                    disabledDatesBackColor={'#E9E9EF'}
+                    disabledDatesTextColor={'#808080'}
+                    disabledDates={[
+                        new Date('2018-01-05'), new Date('2018-01-15')
+                    ]}
                     onSelectionChange={(current, previous) => {
                         console.log(current, previous);
                     }}
@@ -93,6 +90,8 @@ All properties are optional
 
 - **`rangeSelect`** _(bool)_ — True if you want to select a range of dates. By default is true.
 
+- **`disabledDates`** _(array[new Date()])_ - A list of dates which you want to disable
+
 
 ### Colors
  
@@ -120,6 +119,10 @@ All properties are optional
 
 - **`monthTextColor`** _(string)_ — Calendar month header text color.
 
+- **`disabledDatesBackColor`** _(string)_ In use disabled date background color
+
+- **`disabledDatesTextColor`** _(string)_ In use disabled date text color
+
 ## Support
 
-Email vlm.ivanchenko@gmail.com for support.
+Email al.pro@mail.ru for support.

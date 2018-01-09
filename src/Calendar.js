@@ -2,13 +2,14 @@
 
 import React, {
 	PropTypes
-}               from 'react';
+}  from 'react';
+
 import {
 	ListView,
 	StyleSheet,
-}               from 'react-native';
+}  from 'react-native';
 
-import Month    from './Month';
+import Month  from './Month';
 
 
 export default class Calendar extends React.Component {
@@ -79,8 +80,14 @@ export default class Calendar extends React.Component {
 		dayInRangeBackColor: PropTypes.string,
 		dayInRangeTextColor: PropTypes.string,
 
+		disabledDatesBackColor: PropTypes.string,
+		disabledDatesTextColor: PropTypes.string,
+
 		isFutureDate: PropTypes.bool,
-		rangeSelect: PropTypes.bool
+		rangeSelect: PropTypes.bool,
+
+		disabledDates: PropTypes.arrayOf(PropTypes.instanceOf(Date)),
+		disabledDatesStyle: PropTypes.object
 	};
 
 	constructor(props) {
@@ -89,16 +96,27 @@ export default class Calendar extends React.Component {
 		this.changeSelection = this.changeSelection.bind(this);
 		this.generateMonths = this.generateMonths.bind(this);
 
-		let {selectFrom, selectTo, monthsCount, startDate} = this.props;
+		let {selectFrom, selectTo, monthsCount, startDate, disabledDates} = this.props;
+
+		this.disabledDates = (disabledDates || []).map(
+			day=>this.getUTCDate(day)
+		);
 
 		this.selectFrom = selectFrom;
-		this.selectTo = selectTo;
+		this.selectTo = this.getValidSelectTo(selectFrom, selectTo);
+		
 		this.months = this.generateMonths(monthsCount, startDate);
 
 		var dataSource = new ListView.DataSource({rowHasChanged: this.rowHasChanged});
 
 		this.state = {
 			dataSource: dataSource.cloneWithRows(this.months)
+		}
+	}
+
+	componentDidMount(){
+		if (this.selectTo != this.props.selectTo) {
+			this.props.onSelectionChange(this.selectTo, this.selectFrom);
 		}
 	}
 
@@ -116,18 +134,21 @@ export default class Calendar extends React.Component {
 		var monthIterator = startDate;
 		var {isFutureDate, startFromMonday} = this.props;
 
-		var startUTC = Date.UTC(startDate.getYear(), startDate.getMonth(), startDate.getDate());
+		var startUTC = this.getUTCDate(startDate);
 
 		for (var i = 0; i < count; i++) {
 			var month = this.getDates(monthIterator, startFromMonday);
 
 			months.push(month.map((day) => {
-				dateUTC = Date.UTC(day.getYear(), day.getMonth(), day.getDate());
+				dateUTC = this.getUTCDate(day);
+				let notInRange = this.disabledDates.indexOf(dateUTC) > -1;
 				return {
 					date: day,
 					status: this.getStatus(day, this.selectFrom, this.selectTo),
-					disabled: day.getMonth() !== monthIterator.getMonth()
-					|| ((isFutureDate) ? startUTC > dateUTC : startUTC < dateUTC)
+					disabled: (day.getMonth() !== monthIterator.getMonth()
+										|| ((isFutureDate) ? startUTC > dateUTC : startUTC < dateUTC)
+										|| notInRange),
+					notInRange
 				}
 			}));
 
@@ -174,6 +195,36 @@ export default class Calendar extends React.Component {
 		return allDates;
 	}
 
+	getUTCDate(date) {
+		if (date) {
+			return Date.UTC(date.getYear(), date.getMonth(), date.getDate());
+		}
+	}
+
+	getDatesInRange(selectFrom, selectTo) {
+		let dates = [];
+		let selectToUTS = this.getUTCDate(selectTo);
+		let selectFromUTC = this.getUTCDate(selectFrom);
+		while (selectFromUTC < selectToUTS && (!dates.length || dates[dates.length - 1] < selectTo)) {
+			let day = new Date(dates[dates.length - 1] || selectFrom);
+			dates.push(new Date(day.setDate(day.getDate() + 1)));
+		}
+		return [selectFrom].concat(dates);
+	}
+
+	getValidSelectTo(selectFrom, selectTo) {
+		if (this.disabledDates.length) {
+			let datesInRange = this.getDatesInRange(selectFrom, selectTo);
+			for (let i = 0; i < datesInRange.length; i++) {
+				if(this.disabledDates.indexOf(this.getUTCDate(datesInRange[i])) > -1) {
+					selectTo = datesInRange[i - 1] || selectFrom;
+					break;
+				}
+			}
+		}
+		return selectTo;
+	}
+
 	changeSelection(value) {
 		var {selectFrom, selectTo, months} = this;
 
@@ -181,7 +232,7 @@ export default class Calendar extends React.Component {
 			selectFrom = value;
 		} else if (!selectTo) {
 			if (value > selectFrom) {
-				selectTo = value;
+				selectTo = value = this.getValidSelectTo(selectFrom, value);
 			} else {
 				selectFrom = value;
 			}
@@ -195,7 +246,8 @@ export default class Calendar extends React.Component {
 				return {
 					date: day.date,
 					status: this.getStatus(day.date, selectFrom, selectTo),
-					disabled: day.disabled
+					disabled: day.disabled,
+					notInRange: day.notInRange
 				}
 			})
 		});
@@ -203,6 +255,7 @@ export default class Calendar extends React.Component {
 		if (this.props.rangeSelect) {
 			this.selectFrom = selectFrom;
 			this.selectTo = selectTo;
+			
 		} else {
 			this.selectFrom = this.selectTo = selectFrom;
 		}
