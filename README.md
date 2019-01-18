@@ -6,7 +6,7 @@
 ## Getting Started
 
 ```sh
-$ npm install https://github.com/great27/react-native-day-picker --save
+$ npm install https://github.com/alex-pro27/react-native-day-picker --save
 ```
 
 ## Example
